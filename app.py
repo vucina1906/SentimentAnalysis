@@ -9,9 +9,7 @@ import pickle
 from torchtext.data.utils import get_tokenizer
 import matplotlib.pyplot as plt
 from collections import Counter
-
-# Set the matplotlib backend to 'Agg' for non-interactive use (no GUI)
-plt.switch_backend('Agg')
+from wordcloud import WordCloud
 
 app = Flask(__name__)
 
@@ -94,7 +92,7 @@ def scrape_all_pages_reviews(url):
 
         try:
             next_button = driver.find_element(By.XPATH, '//button[@aria-label="Next page"]')
-            is_disabled = next_button.get_attribute("disabled")  # Corrected to 'get_attribute'
+            is_disabled = next_button.get_attribute("disabled")
             print(f"Next button disabled: {is_disabled}")
             if is_disabled is not None:
                 print("Reached the last page. Stopping.")
@@ -112,19 +110,6 @@ def scrape_all_pages_reviews(url):
     print("Scraping complete! Reviews saved to 'all_reviews.csv'.")
     return df_reviews
 
-# Function to identify key negative phrases
-def contains_strong_negative_phrases(review_text):
-    strong_negative_phrases = [
-        "poor hotel", "waste of money", "never book", "embarrassed", "horrible",
-        "not working", "high temperature", "couldn't sleep", "bad experience",
-        "worst", "not clean"
-    ]
-    
-    for phrase in strong_negative_phrases:
-        if phrase in review_text.lower():
-            return True
-    return False
-
 # Function to predict sentiment for each review
 def predict_sentiment(review_title, review_text):
     review = review_title + "." + review_text
@@ -132,15 +117,9 @@ def predict_sentiment(review_title, review_text):
     review_tensor = torch.tensor(tokenized_review, dtype=torch.long).unsqueeze(0)
     with torch.no_grad():
         predicted_rating = model(review_tensor).item()
-
-    # Check if the review contains strong negative phrases
-    if contains_strong_negative_phrases(review_text):
-        return "negative"  # Override to negative if key phrases are found
-
-    # Adjusted sentiment boundaries
-    if predicted_rating <= 4:
+    if predicted_rating <= 3:
         return "negative"
-    elif 5 <= predicted_rating <= 6:
+    elif 4 <= predicted_rating <= 6:
         return "neutral"
     else:
         return "positive"
@@ -174,6 +153,13 @@ def highlight_negative_words(df_reviews):
     common_negative_words = Counter(filtered_negative_words).most_common(10)
     return common_negative_words
 
+def create_wordcloud(df_reviews):
+    negative_reviews = df_reviews[df_reviews['predicted_sentiment'] == 'negative']
+    all_negative_words = ' '.join(negative_reviews['review_text'].tolist())
+    
+    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(all_negative_words)
+    wordcloud.to_file('static/negative_wordcloud.png')
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -192,12 +178,12 @@ def analyze():
         df_reviews.to_csv('all_reviews_with_sentiment.csv', index=False, encoding='utf-8-sig')
 
         plot_sentiment_distribution(df_reviews)
-
-        common_negative_words = highlight_negative_words(df_reviews)
+        create_wordcloud(df_reviews)  # Generate WordCloud image
 
         return render_template('results.html', 
                                sentiment_image='sentiment_distribution.png', 
-                               common_words=common_negative_words)
+                               wordcloud_image='negative_wordcloud.png')
+
 
 if __name__ == '__main__':
     load_model_and_vocab()  # Load model and vocabulary at startup
