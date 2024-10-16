@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Review Analyzer</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background-image: url("{{ url_for('static', filename='background.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .container {
+            background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 100px;
+        }
+
+        h1, label {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Hotel Review Analyzer</h1>
+        <form action="/analyze" method="POST" class="mt-3">
+            <div class="form-group">
+                <label for="review_url">Booking.com Review URL</label>
+                <input type="text" class="form-control" id="review_url" name="review_url" placeholder="Enter Booking.com Review URL" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Analyze</button>
+        </form>
+    </div>
+</body>
+</html>

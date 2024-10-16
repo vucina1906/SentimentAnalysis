@@ -1,0 +1,6 @@
+Flask == 2.2.5
+selenium == 3.141.0
+pandas == 2.2.2
+torch == 1.13.1
+torchtext == 0.14.1
+matplotlib == 3.6.0
